@@ -1,1 +1,0 @@
-/usr/bin/clang++ -g -lglfw -lvulkan CMakeFiles/StimplyEngine.dir/src/core/Engine.cpp.o CMakeFiles/StimplyEngine.dir/src/core/utils/logger.cpp.o CMakeFiles/StimplyEngine.dir/src/main.cpp.o CMakeFiles/StimplyEngine.dir/src/renderer/vulkan/VulkanRenderer.cpp.o -o /home/diego/Programming/C++/Stimply/bin/StimplyEngine 
