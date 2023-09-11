@@ -11,19 +11,32 @@
 class VulkanRenderer : public Renderer
 {
 public:
-    VulkanRenderer(const char* rendererName, const char* applicationName, int width, int height);
+    VulkanRenderer() = default;
     virtual ~VulkanRenderer() override;
 
     virtual bool BeginFrame(float deltaTime) override;
     virtual bool EndFrame(float deltaTime) override;
     virtual void Resize(int width, int height) override;
+    virtual void Initialize(const char* rendererName, const char* applicationName, int width, int height, struct GLFWwindow* window) override;
 
 private:
+    struct GLFWwindow* window = nullptr;
+
     VkInstance instance = nullptr;
+    VkAllocationCallbacks* allocator = nullptr;
     VkDebugUtilsMessengerEXT messenger = nullptr;
+    VkSurfaceKHR surface = nullptr;
     VkPhysicalDevice physicalDevice = nullptr;
     VkDevice logicalDevice = nullptr;
 
 private:
     void createInstance(const char* rendererName, const char* applicationName);
+    void createVulkanDebugger(PFN_vkDebugUtilsMessengerCallbackEXT callback);
+    void destroyVulkanDebugger();
+    static VkBool32 VKAPI_PTR debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT           messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT                  messageTypes,
+        const VkDebugUtilsMessengerCallbackDataEXT*      pCallbackData,
+        void*                                            pUserData
+    );
 };

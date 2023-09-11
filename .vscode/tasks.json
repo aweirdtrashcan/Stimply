@@ -1,0 +1,30 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "Build Engine",
+			"command": "build",
+			"windows": {
+				"command": "./build.bat"
+			},
+			"linux": {
+				"command": "./build.sh"
+			},
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"type": "shell",
+			"label": "Clean Engine",
+			"windows": {
+				"command": "./clean.bat"
+			},
+			"linux": {
+				"command": "./clean.sh"
+			},
+			"group": "build",
+			"problemMatcher": []
+		}
+	]
+}

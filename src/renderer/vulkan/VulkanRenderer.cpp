@@ -1,19 +1,28 @@
 #include "VulkanRenderer.h"
 #include "core/utils/Includes.h"
 #include "core/utils/logger.h"
+#include <GLFW/glfw3.h>
 #include <cstring>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 
-VulkanRenderer::VulkanRenderer(const char* rendererName, const char* applicationName, int width, int height)
+void VulkanRenderer::Initialize(const char* rendererName, const char* applicationName, int width, int height, struct GLFWwindow* window) 
 {
     Logger::SLOG("Initializing Vulkan Renderer.");
     createInstance(rendererName, applicationName);
+    createVulkanDebugger(&VulkanRenderer::debugCallback);
+    VK_CHECK(glfwCreateWindowSurface(instance, window, allocator, &surface));
+    SINFO("Vulkan Surface created successfully.");
 }
 
 VulkanRenderer::~VulkanRenderer()
 {
-    Logger::SLOG("Destroying Vulkan Renderer.");
+    Logger::SLOG("Destroying Vulkan Surface.");
+    vkDestroySurfaceKHR(instance, surface, allocator);
+    Logger::SLOG("Destroying Vulkan Debugger.");
+    destroyVulkanDebugger();
+    Logger::SLOG("Destroying Vulkan Instance.");
+    vkDestroyInstance(instance, allocator);
 }
 
 bool VulkanRenderer::BeginFrame(float deltaTime)
@@ -134,4 +143,61 @@ void VulkanRenderer::createInstance(const char* rendererName, const char* applic
         }
     }
 
+    instanceInfo.enabledLayerCount = static_cast<uint32_t>(requiredLayers.size());
+    instanceInfo.ppEnabledLayerNames = requiredLayers.data();
+
+    VK_CHECK(vkCreateInstance(&instanceInfo, allocator, &instance));
+
+    SINFO("Vulkan Instance created successfully.");
+}
+
+void VulkanRenderer::createVulkanDebugger(PFN_vkDebugUtilsMessengerCallbackEXT callback)
+{
+#ifdef _DEBUG
+    VkDebugUtilsMessengerCreateInfoEXT createInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+                             VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+    createInfo.pfnUserCallback = callback;
+
+    PFN_vkCreateDebugUtilsMessengerEXT func = nullptr;
+    func = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
+
+    if (!func)
+    {
+        SFATAL("Failed to load vkCreateDebugUtilsMessengerEXT function pointer.");
+    }
+
+    VK_CHECK(func(instance, &createInfo, allocator, &messenger));
+
+    SINFO("Created Vulkan Debugger successfully.");
+#endif
+}
+
+void VulkanRenderer::destroyVulkanDebugger()
+{
+#ifdef _DEBUG
+    PFN_vkDestroyDebugUtilsMessengerEXT func = nullptr;
+    func = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
+
+    if (!func)
+    {
+        SFATAL("Failed to load vkDestroyDebugUtilsMessengerEXT function pointer.");
+    }
+
+    func(instance, messenger, allocator);
+#endif
+}
+
+VkBool32 VKAPI_PTR VulkanRenderer::debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT           messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT                  messageTypes,
+        const VkDebugUtilsMessengerCallbackDataEXT*      pCallbackData,
+        void*                                            pUserData
+) {
+    SINFO("%s", pCallbackData->pMessage);
+    return VK_FALSE;
 }

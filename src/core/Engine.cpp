@@ -8,8 +8,7 @@ Engine::Engine(const char* applicationName, int width, int height)
     :
     applicationName(applicationName),
     width(width),
-    height(height),
-    renderer("Stimply Renderer", applicationName, width, height)
+    height(height)
 {
     if (glfwInit() != GLFW_TRUE)
     {
@@ -24,6 +23,8 @@ Engine::Engine(const char* applicationName, int width, int height)
         Logger::SLOG("Failed to create GLFW window.");
         debugBreak();
     }
+
+    renderer.Initialize("Stimply Renderer", applicationName, width, height, window);
 }
 
 Engine::~Engine()
